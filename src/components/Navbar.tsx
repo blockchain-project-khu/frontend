@@ -1,10 +1,32 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Search, LogOut, User } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useToast } from '@/hooks/use-toast';
 
 const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const { isLoggedIn, user, logout } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: "로그아웃 성공",
+      description: "다음에 또 만나요!",
+    });
+    navigate('/');
+  };
 
   return (
     <nav className="bg-white shadow-sm py-4">
@@ -33,17 +55,56 @@ const Navbar = () => {
           <Link to="/properties" className="text-gray-800 hover:text-blue-600 transition-colors">
             매물
           </Link>
-          <Link to="/dashboard" className="text-gray-800 hover:text-blue-600 transition-colors">
-            마이페이지
-          </Link>
-          <Link to="/login" className="bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 py-2 px-4 rounded-full transition-colors">
-            로그인
-          </Link>
-          <div className="bg-blue-500 text-white p-2 rounded-full">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          </div>
+          
+          {isLoggedIn ? (
+            <>
+              <Link to="/dashboard" className="text-gray-800 hover:text-blue-600 transition-colors">
+                마이페이지
+              </Link>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Avatar className="h-9 w-9 cursor-pointer">
+                    <AvatarImage src="/placeholder.svg" alt={user?.name || "사용자"} />
+                    <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="flex items-center justify-start gap-2 p-2">
+                    <div className="flex flex-col space-y-1 leading-none">
+                      <p className="font-medium">{user?.name || "사용자"}</p>
+                      <p className="w-[200px] truncate text-sm text-gray-500">{user?.email}</p>
+                    </div>
+                  </div>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="cursor-pointer flex items-center w-full">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>마이페이지</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem onSelect={handleLogout} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>로그아웃</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 py-2 px-4 rounded-full transition-colors">
+                로그인
+              </Link>
+              <Link to="/register" className="bg-blue-500 text-white py-2 px-4 rounded-full hover:bg-blue-600 transition-colors">
+                회원가입
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>

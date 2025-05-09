@@ -1,6 +1,5 @@
-
 import { Link } from 'react-router-dom';
-import Navbar from '../components/Navbar';
+import Navbar from "@/components/Navbar";
 import PropertyCard from '../components/PropertyCard';
 import Footer from '../components/Footer';
 import { properties } from '../data/mockData';
@@ -9,7 +8,7 @@ const Index = () => {
   const featuredProperties = properties.slice(0, 3);
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-white">
       <Navbar />
       
       {/* Hero Section */}
