@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -11,8 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import Navbar from '@/components/Navbar';
 
 const Register = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -22,9 +20,9 @@ const Register = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
       toast({
         title: "비밀번호 오류",
@@ -33,17 +31,45 @@ const Register = () => {
       });
       return;
     }
-    
-    // 실제 애플리케이션에서는 API 호출로 회원가입을 처리합니다.
-    login({ name, email });
-    
-    toast({
-      title: "회원가입 성공",
-      description: "환영합니다!",
-    });
-    
-    // 홈 화면으로 리다이렉션
-    navigate('/');
+
+    try {
+      const res = await fetch('http://localhost:8080/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username,
+          password
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.isSuccess) {
+        toast({
+          title: "회원가입 성공",
+          description: data.message || "환영합니다!",
+        });
+
+        // 로그인 화면으로 이동
+        navigate('/login');
+      } else {
+        toast({
+          title: "회원가입 실패",
+          description: data.message || "문제가 발생했습니다.",
+          variant: "destructive"
+        });
+      }
+
+    } catch (error) {
+      console.error("회원가입 요청 중 오류:", error);
+      toast({
+        title: "에러 발생",
+        description: "서버와의 통신 중 문제가 발생했습니다.",
+        variant: "destructive"
+      });
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -80,26 +106,13 @@ const Register = () => {
 
           <form onSubmit={handleRegister} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">이름</label>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">아이디</label>
               <Input
-                id="name"
+                id="username"
                 type="text"
-                placeholder="홍길동"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">이메일</label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="example@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="아이디를 입력하세요"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 className="w-full"
               />

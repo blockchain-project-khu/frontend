@@ -1,9 +1,8 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type User = {
-  name: string;
-  email: string;
+  username: string;
+  password: string;
 };
 
 type AuthContextType = {
@@ -38,6 +37,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
     setIsLoggedIn(false);
     localStorage.removeItem('user');
+    localStorage.removeItem('accessToken');
   };
 
   return (
