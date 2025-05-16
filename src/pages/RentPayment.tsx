@@ -1,8 +1,7 @@
-
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { rentalPayments } from '../data/mockData'; // Assuming rentalPayments is in mockData
-import { Button } from '@/components/ui/button'; // Using shadcn Button for consistency if new buttons are needed, but will replicate existing style for now.
+import { Button } from '@/components/ui/button'; // Using shadcn Button
 import { Link } from 'react-router-dom';
 
 const RentPayment = () => {
@@ -47,12 +46,12 @@ const RentPayment = () => {
               </div>
               
               <div className="space-y-3">
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md transition-colors text-base font-medium">
-                  지금 납부하기
-                </button>
-                <button className="w-full border border-blue-600 text-blue-600 hover:bg-blue-50 py-3 rounded-md transition-colors text-base font-medium">
-                  자동 연결하기
-                </button>
+                <Button asChild className="w-full text-base font-medium py-3 h-auto">
+                  <Link to="/payment-processing">지금 납부하기</Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-700 text-base font-medium py-3 h-auto">
+                  <Link to="/auto-pay-setup">자동 연결하기</Link>
+                </Button>
               </div>
             </div>
             
@@ -122,4 +121,3 @@ const RentPayment = () => {
 };
 
 export default RentPayment;
-
