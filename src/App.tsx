@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import ListProperty from "./pages/ListProperty";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import RentPayment from "./pages/RentPayment"; // 새 페이지 임포트
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/list-property" element={<ListProperty />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/rent-payment" element={<RentPayment />} /> {/* 새 라우트 추가 */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
@@ -38,3 +40,4 @@ const App = () => (
 );
 
 export default App;
+
