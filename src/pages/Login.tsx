@@ -32,8 +32,14 @@ const Login = () => {
       
       localStorage.setItem('accessToken', accessToken);
       
-      // AuthContext에 사용자 정보 저장
-      login({ username, password });
+      // AuthContext에 사용자 정보 저장 시 name과 email 추가
+      // 현재 로그인 API에서 name, email을 반환하지 않으므로, username을 name으로 사용하고 임시 email을 사용합니다.
+      // 추후 API가 실제 name, email을 반환하도록 수정하거나, 별도 API로 사용자 정보를 가져와야 합니다.
+      login({ 
+        username, 
+        name: username, // 임시로 username을 name으로 사용
+        email: `${username}@example.com` // 임시 이메일
+      });
       
       toast({
         title: "로그인 성공",
