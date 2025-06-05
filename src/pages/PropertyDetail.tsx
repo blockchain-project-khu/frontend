@@ -1,9 +1,12 @@
 
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { properties } from '../data/mockData';
+import { fundingService } from '../services/fundingService';
+import { toast } from 'sonner';
 
 const PropertyDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -12,6 +15,18 @@ const PropertyDetail = () => {
   
   const property = properties.find(p => p.id === id);
   
+  const createFundingMutation = useMutation({
+    mutationFn: (amount: number) => fundingService.createFunding(Number(id), { amount }),
+    onSuccess: (data) => {
+      toast.success('펀딩이 성공적으로 신청되었습니다!');
+      console.log('펀딩 ID:', data.fundingId);
+    },
+    onError: (error) => {
+      console.error('펀딩 신청 중 오류 발생:', error);
+      toast.error('펀딩 신청 중 오류가 발생했습니다.');
+    }
+  });
+
   if (!property) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -37,6 +52,10 @@ const PropertyDetail = () => {
   const formattedInvestmentAmount = new Intl.NumberFormat('ko-KR').format(investmentAmount);
   const estimatedMonthlyReturn = (monthlyReturn * selectedInvestment) / 100;
   const formattedEstimatedMonthlyReturn = new Intl.NumberFormat('ko-KR').format(estimatedMonthlyReturn);
+
+  const handleInvestment = () => {
+    createFundingMutation.mutate(investmentAmount);
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -298,8 +317,12 @@ const PropertyDetail = () => {
                   <div className="text-xl font-bold text-green-500">{returnRate}%</div>
                 </div>
                 
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md transition-colors mb-4">
-                  지금 투자하기
+                <button 
+                  onClick={handleInvestment}
+                  disabled={createFundingMutation.isPending}
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-3 rounded-md transition-colors mb-4"
+                >
+                  {createFundingMutation.isPending ? '처리 중...' : '지금 투자하기'}
                 </button>
                 
                 <button className="w-full border border-blue-600 text-blue-600 hover:bg-blue-50 py-3 rounded-md transition-colors">

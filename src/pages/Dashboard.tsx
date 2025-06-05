@@ -1,18 +1,53 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { userPortfolio, properties, transactions, rentalPayments } from '../data/mockData';
+import { fundingService } from '../services/fundingService';
+import { FundingStatus } from '../lib/api-types';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'buyer' | 'seller'>('buyer');
   const [activeBuyerSection, setActiveBuyerSection] = useState<'overview' | 'investments' | 'transactions'>('overview');
+  const [selectedPropertyId, setSelectedPropertyId] = useState<number>(1);
   
   const { totalInvestment, monthlyIncome, averageReturn, ownedNFTs, investments } = userPortfolio;
   
   const formattedTotalInvestment = new Intl.NumberFormat('ko-KR').format(totalInvestment);
   const formattedMonthlyIncome = new Intl.NumberFormat('ko-KR').format(monthlyIncome);
+
+  // 내 펀딩 목록 조회
+  const { data: myFundings, isLoading: isLoadingMyFundings } = useQuery({
+    queryKey: ['myFundings'],
+    queryFn: () => fundingService.getMyFundings(),
+  });
+
+  // 선택된 부동산의 펀딩 목록 조회
+  const { data: propertyFundings, isLoading: isLoadingPropertyFundings } = useQuery({
+    queryKey: ['propertyFundings', selectedPropertyId],
+    queryFn: () => fundingService.getFundingsByProperty(selectedPropertyId),
+  });
+
+  const getStatusText = (status: FundingStatus) => {
+    switch (status) {
+      case FundingStatus.PENDING: return '대기중';
+      case FundingStatus.APPROVED: return '승인됨';
+      case FundingStatus.REJECTED: return '거절됨';
+      case FundingStatus.COMPLETED: return '완료됨';
+      default: return status;
+    }
+  };
+
+  const getStatusColor = (status: FundingStatus) => {
+    switch (status) {
+      case FundingStatus.PENDING: return 'bg-yellow-100 text-yellow-800';
+      case FundingStatus.APPROVED: return 'bg-green-100 text-green-800';
+      case FundingStatus.REJECTED: return 'bg-red-100 text-red-800';
+      case FundingStatus.COMPLETED: return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
   
   // Get property details for each investment
   const userInvestments = investments.map(investment => {
@@ -143,7 +178,7 @@ const Dashboard = () => {
                           : 'text-gray-500 hover:text-gray-700'
                       }`}
                     >
-                      내 투자
+                      구매 내역
                     </button>
                     <button
                       onClick={() => setActiveBuyerSection('transactions')}
@@ -252,65 +287,56 @@ const Dashboard = () => {
                   
                   {activeBuyerSection === 'investments' && (
                     <div>
-                      <h3 className="text-lg font-semibold mb-4">내 투자</h3>
-                      {userInvestments.map((investment) => (
-                        <div key={investment.id} className="mb-4 border rounded-lg overflow-hidden">
-                          <div className="md:flex">
-                            <div className="md:w-1/4">
-                              <img 
-                                src={investment.property?.images[0]} 
-                                alt={investment.property?.title} 
-                                className="w-full h-48 md:h-full object-cover"
-                              />
-                            </div>
-                            <div className="p-4 md:w-3/4">
-                              {investment.property?.id === '1' && (
-                                <div className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-2">
-                                  모집 완료
+                      <h3 className="text-lg font-semibold mb-4">구매 내역</h3>
+                      {isLoadingMyFundings ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                          <p className="mt-2 text-gray-600">로딩 중...</p>
+                        </div>
+                      ) : myFundings && myFundings.length > 0 ? (
+                        <div className="space-y-4">
+                          {myFundings.map((funding) => {
+                            const property = properties.find(p => p.id === funding.propertyId.toString());
+                            return (
+                              <div key={funding.fundingId} className="border rounded-lg p-4">
+                                <div className="flex justify-between items-start mb-4">
+                                  <div>
+                                    <h4 className="font-semibold">{property?.title || '부동산 정보 없음'}</h4>
+                                    <p className="text-sm text-gray-600">{property?.address}</p>
+                                  </div>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(funding.status)}`}>
+                                    {getStatusText(funding.status)}
+                                  </span>
                                 </div>
-                              )}
-                              <h4 className="text-lg font-semibold mb-1">{investment.property?.title}</h4>
-                              <p className="text-gray-600 text-sm mb-4">{investment.property?.address}</p>
-                              
-                              <div className="grid grid-cols-2 gap-4 mb-4">
-                                <div>
-                                  <p className="text-sm text-gray-500">내 지분</p>
-                                  <p className="font-semibold">10%</p>
+                                
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                  <div>
+                                    <p className="text-sm text-gray-500">펀딩 ID</p>
+                                    <p className="font-medium">{funding.fundingId}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-gray-500">투자 금액</p>
+                                    <p className="font-medium">₩{new Intl.NumberFormat('ko-KR').format(funding.amount)}</p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <p className="text-sm text-gray-500">월 수익</p>
-                                  <p className="font-semibold text-green-500">₩{new Intl.NumberFormat('ko-KR').format(investment.monthlyReturn)}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm text-gray-500">투자액</p>
-                                  <p className="font-semibold">₩{new Intl.NumberFormat('ko-KR').format(investment.amount)}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm text-gray-500">투자일</p>
-                                  <p className="font-semibold">{investment.purchaseDate.toLocaleDateString()}</p>
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-center text-sm">
-                                <span className="text-gray-500">
-                                  다음 수익 지급일
-                                </span>
-                                <span className="ml-2 bg-blue-50 text-blue-600 px-2 py-1 rounded">
-                                  2025년 5월 1일
-                                </span>
-                                <div className="ml-auto">
+                                
+                                <div className="flex justify-end">
                                   <Link 
-                                    to={`/properties/${investment.propertyId}`}
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                    to={`/funding/${funding.fundingId}`}
+                                    className="text-blue-500 hover:text-blue-700 text-sm"
                                   >
-                                    자세히 보기
+                                    상세보기 →
                                   </Link>
                                 </div>
                               </div>
-                            </div>
-                          </div>
+                            );
+                          })}
                         </div>
-                      ))}
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-gray-600">구매 내역이 없습니다.</p>
+                        </div>
+                      )}
                     </div>
                   )}
                   
@@ -362,8 +388,63 @@ const Dashboard = () => {
           
           {activeTab === 'seller' && (
             <div className="bg-white shadow-sm rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-6">월세 납부</h3>
+              <h3 className="text-lg font-semibold mb-6">판매 내역</h3>
               
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  부동산 선택
+                </label>
+                <select 
+                  value={selectedPropertyId} 
+                  onChange={(e) => setSelectedPropertyId(Number(e.target.value))}
+                  className="border border-gray-300 rounded-md px-3 py-2"
+                >
+                  {properties.map((property) => (
+                    <option key={property.id} value={Number(property.id)}>
+                      {property.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {isLoadingPropertyFundings ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">로딩 중...</p>
+                </div>
+              ) : propertyFundings && propertyFundings.length > 0 ? (
+                <div className="space-y-4">
+                  {propertyFundings.map((funding) => (
+                    <div key={funding.fundingId} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h4 className="font-semibold">펀딩 ID: {funding.fundingId}</h4>
+                          <p className="text-sm text-gray-600">사용자 ID: {funding.userId}</p>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(funding.status)}`}>
+                          {getStatusText(funding.status)}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-500">투자 금액</p>
+                          <p className="font-medium">₩{new Intl.NumberFormat('ko-KR').format(funding.amount)}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">상태</p>
+                          <p className="font-medium">{getStatusText(funding.status)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-600">해당 부동산에 대한 펀딩 내역이 없습니다.</p>
+                </div>
+              )}
+
               <div className="mb-8">
                 <div className="flex items-center mb-4">
                   <img 

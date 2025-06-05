@@ -13,8 +13,9 @@ import ListProperty from "./pages/ListProperty";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import RentPayment from "./pages/RentPayment";
-import PaymentProcessing from "./pages/PaymentProcessing"; // 새 페이지 임포트
-import AutoPaySetup from "./pages/AutoPaySetup"; // 새 페이지 임포트
+import PaymentProcessing from "./pages/PaymentProcessing";
+import AutoPaySetup from "./pages/AutoPaySetup";
+import FundingDetail from "./pages/FundingDetail";
 
 const queryClient = new QueryClient();
 
@@ -33,8 +34,9 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/rent-payment" element={<RentPayment />} />
-          <Route path="/payment-processing" element={<PaymentProcessing />} /> {/* 새 라우트 추가 */}
-          <Route path="/auto-pay-setup" element={<AutoPaySetup />} /> {/* 새 라우트 추가 */}
+          <Route path="/payment-processing" element={<PaymentProcessing />} />
+          <Route path="/auto-pay-setup" element={<AutoPaySetup />} />
+          <Route path="/funding/:fundingId" element={<FundingDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
